@@ -175,32 +175,32 @@ a:hover {
 }
 
 .dashboard-grid {
-  height: calc(100dvh - 72px);
-  min-height: 0;
+  min-height: calc(100dvh - 72px);
   display: grid;
   grid-template-columns: minmax(260px, 290px) minmax(0, 1fr) minmax(330px, 390px);
+  align-items: start;
   gap: 12px;
   padding: 14px 16px 16px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .dashboard-column {
-  min-height: 0;
   display: grid;
+  align-content: start;
   gap: 12px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .left-column {
-  grid-template-rows: auto minmax(150px, 1fr);
+  grid-template-rows: auto auto;
 }
 
 .center-column {
-  grid-template-rows: minmax(0, 1fr);
+  grid-template-rows: auto;
 }
 
 .right-column {
-  grid-template-rows: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  grid-template-rows: auto auto;
 }
 
 .logs-page {
@@ -213,7 +213,6 @@ a:hover {
 .panel {
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
   border: 1px solid var(--panel-border);
   border-radius: 8px;
   background: var(--panel-bg);
@@ -482,9 +481,11 @@ a:hover {
 }
 
 .panel-table {
-  height: 100%;
+  max-height: calc(100dvh - 104px);
+  min-height: 420px;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
 }
 
 .count-chip {
@@ -664,13 +665,11 @@ a:hover {
 .detail-panel,
 .timeline-panel {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
 }
 
 .deployment-detail-body {
-  min-height: 0;
-  overflow: auto;
-  overscroll-behavior: contain;
+  overflow: visible;
   padding: 12px 18px 14px;
 }
 
@@ -741,23 +740,25 @@ a:hover {
 }
 
 .pipeline-steps {
+  --pipeline-node-size: 24px;
+  --pipeline-node-center: 32px;
   position: relative;
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
   margin: 0;
-  padding: 16px 14px 10px;
+  padding: 20px 14px 18px;
   list-style: none;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .pipeline-steps::before {
   content: "";
   position: absolute;
-  top: 28px;
-  right: 30px;
-  left: 30px;
+  top: var(--pipeline-node-center);
+  right: calc(14px + (var(--pipeline-node-size) / 2));
+  left: calc(14px + (var(--pipeline-node-size) / 2));
   height: 2px;
   background: var(--panel-border-strong);
 }
@@ -765,8 +766,9 @@ a:hover {
 .pipeline-step {
   position: relative;
   display: grid;
+  grid-template-rows: var(--pipeline-node-size) auto;
   justify-items: center;
-  gap: 8px;
+  gap: 10px;
   color: var(--text-soft);
   text-align: center;
   font-size: 10px;
@@ -774,8 +776,8 @@ a:hover {
 }
 
 .pipeline-node {
-  width: 20px;
-  height: 20px;
+  width: var(--pipeline-node-size);
+  height: var(--pipeline-node-size);
   display: block;
   border: 2px solid var(--panel-border-strong);
   border-radius: 999px;
@@ -792,13 +794,13 @@ a:hover {
 .pipeline-step.is-complete .pipeline-node::after {
   content: "";
   position: absolute;
-  top: 5px;
-  left: 7px;
-  width: 5px;
-  height: 9px;
+  top: 46%;
+  left: 50%;
+  width: 6px;
+  height: 10px;
   border-right: 2px solid #ffffff;
   border-bottom: 2px solid #ffffff;
-  transform: rotate(45deg);
+  transform: translate(-50%, -58%) rotate(45deg);
 }
 
 .pipeline-step.is-active .pipeline-node {
