@@ -1,0 +1,38 @@
+{
+  "name": "@brimble/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "pnpm --filter @brimble/contracts run build",
+    "dev": "tsx watch src/index.ts",
+    "prebuild": "pnpm --filter @brimble/contracts run build",
+    "build": "tsc -p tsconfig.build.json",
+    "pretypecheck": "pnpm --filter @brimble/contracts run build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "pretest": "pnpm --filter @brimble/contracts run build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@brimble/contracts": "workspace:*",
+    "@fastify/multipart": "^9.0.3",
+    "better-sqlite3": "^11.10.0",
+    "fastify": "^5.3.3",
+    "strip-ansi": "^7.1.0",
+    "tar": "^7.4.3",
+    "ulid": "^2.4.0",
+    "unzipper": "^0.12.3",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.15.21",
+    "@types/unzipper": "^0.10.11",
+    "form-data-encoder": "^4.0.2",
+    "formdata-node": "^6.0.3",
+    "light-my-request": "^6.6.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3",
+    "vitest": "^2.1.8"
+  }
+}

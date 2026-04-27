@@ -1,0 +1,76 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: infra/docker/backend.Dockerfile
+    init: true
+    environment:
+      NODE_ENV: production
+      APP_PORT: 3001
+      SQLITE_PATH: /data/db/app.sqlite
+      STORAGE_ROOT: /data
+      UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES:-104857600}
+      PIPELINE_MAX_CONCURRENCY: ${PIPELINE_MAX_CONCURRENCY:-1}
+      DEFAULT_ROUTE_MODE: ${DEFAULT_ROUTE_MODE:-hostname}
+      HOSTNAME_SUFFIX: ${HOSTNAME_SUFFIX:-localhost}
+      CONTROL_PLANE_PUBLIC_URL: ${CONTROL_PLANE_PUBLIC_URL:-http://localhost:8080}
+      DEPLOY_DEFAULT_PORT: ${DEPLOY_DEFAULT_PORT:-3000}
+      DEPLOY_HEALTHCHECK_INTERVAL_MS: ${DEPLOY_HEALTHCHECK_INTERVAL_MS:-2000}
+      DEPLOY_HEALTHCHECK_TIMEOUT_MS: ${DEPLOY_HEALTHCHECK_TIMEOUT_MS:-60000}
+      CADDY_ADMIN_URL: http://caddy:2019
+      APP_NETWORK_NAME: brimble_local_network
+      RAILPACK_FRONTEND_IMAGE: ${RAILPACK_FRONTEND_IMAGE:-ghcr.io/railwayapp/railpack-frontend}
+      KEEP_WORKSPACES: ${KEEP_WORKSPACES:-true}
+      VITE_API_BASE: /api
+    volumes:
+      - app_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - brimble
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3001/api/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: infra/docker/frontend.Dockerfile
+      args:
+        VITE_API_BASE: /api
+    networks:
+      - brimble
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
+
+  caddy:
+    image: caddy:2.8.4-alpine
+    command: ["caddy", "run", "--resume", "--config", "/etc/caddy/bootstrap.json"]
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    volumes:
+      - ./infra/caddy/bootstrap.json:/etc/caddy/bootstrap.json:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - brimble
+
+volumes:
+  app_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  brimble:
+    name: brimble_local_network

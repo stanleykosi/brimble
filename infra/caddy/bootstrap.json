@@ -1,0 +1,67 @@
+{
+  "admin": {
+    "listen": "0.0.0.0:2019"
+  },
+  "apps": {
+    "http": {
+      "servers": {
+        "control_plane": {
+          "listen": [
+            ":80"
+          ],
+          "automatic_https": {
+            "disable": true,
+            "disable_redirects": true
+          },
+          "routes": [
+            {
+              "match": [
+                {
+                  "host": [
+                    "localhost",
+                    "127.0.0.1"
+                  ],
+                  "path": [
+                    "/api*"
+                  ]
+                }
+              ],
+              "handle": [
+                {
+                  "handler": "reverse_proxy",
+                  "upstreams": [
+                    {
+                      "dial": "backend:3001"
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            },
+            {
+              "match": [
+                {
+                  "host": [
+                    "localhost",
+                    "127.0.0.1"
+                  ]
+                }
+              ],
+              "handle": [
+                {
+                  "handler": "reverse_proxy",
+                  "upstreams": [
+                    {
+                      "dial": "frontend:80"
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}

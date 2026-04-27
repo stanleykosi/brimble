@@ -1,0 +1,15 @@
+# Project-scoped Codex defaults for this repository.
+# Codex loads project config only for trusted projects.
+# Keep this conservative by default; raise access manually only if you trust the repo and want fewer prompts.
+
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+web_search = "cached"
+model_reasoning_effort = "xhigh"
+personality = "pragmatic"
+
+[features]
+shell_snapshot = true
+multi_agent = true
+shell_tool = true
+unified_exec = true

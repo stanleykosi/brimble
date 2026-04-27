@@ -1,0 +1,15 @@
+.git
+.codex
+node_modules
+dist
+coverage
+tmp
+.pnpm-store
+.env
+.env.local
+*.log
+*.sqlite
+*.sqlite-journal
+apps/api/dist
+apps/web/dist
+sample-app/sample-app.tgz

@@ -1,0 +1,11 @@
+{
+  "name": "brimble-deployment-control-plane",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.15.1",
+  "scripts": {
+    "build": "pnpm --filter @brimble/contracts run build && pnpm --filter @brimble/api run build && pnpm --filter @brimble/web run build",
+    "typecheck": "pnpm --filter @brimble/contracts run typecheck && pnpm --filter @brimble/api run typecheck && pnpm --filter @brimble/web run typecheck",
+    "test": "pnpm --filter @brimble/api run test"
+  }
+}
