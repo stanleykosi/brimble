@@ -43,8 +43,6 @@ Local-first deployment control plane for the Brimble take-home. It is a one-page
 ├─ docs/
 ├─ docker-compose.yml
 ├─ .env.example
-├─ REVIEWER_REHEARSAL.md
-└─ SUBMISSION_HANDOFF.md
 ```
 
 ## Quick start
