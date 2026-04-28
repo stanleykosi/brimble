@@ -1,11 +1,9 @@
 import type {
   DeploymentEvent,
   DeploymentEventPhase,
+  DeploymentEventPayload,
   DeploymentEventStream,
-  DeploymentEventType,
-  DeploymentLogPayload,
-  DeploymentStatusPayload,
-  DeploymentSystemPayload
+  DeploymentEventType
 } from '@brimble/contracts';
 import type Database from 'better-sqlite3';
 
@@ -17,8 +15,6 @@ interface DeploymentEventRow {
   payload_json: string;
   created_at: string;
 }
-
-type DeploymentEventPayload = DeploymentLogPayload | DeploymentStatusPayload | DeploymentSystemPayload;
 
 function mapEventRow(row: DeploymentEventRow): DeploymentEvent {
   return {
@@ -90,7 +86,11 @@ export class DeploymentEventRepository {
           )
           .get(deploymentId, sequence);
 
-        return mapEventRow(inserted!);
+        if (!inserted) {
+          throw new Error(`Failed to read inserted deployment event ${deploymentId}:${sequence}`);
+        }
+
+        return mapEventRow(inserted);
       }
     );
   }

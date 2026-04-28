@@ -5,14 +5,20 @@ import { DeploymentService } from './deployment-service.js';
 import { DockerRuntimeService } from './docker-runtime-service.js';
 import { CaddyService } from './caddy-service.js';
 
+type StartupDockerRuntimeService = Pick<
+  DockerRuntimeService,
+  'containerExists' | 'listManagedContainers' | 'stopAndRemoveContainer'
+>;
+type StartupCaddyService = Pick<CaddyService, 'waitForAdmin' | 'applyRoutes'>;
+
 export class StartupReconcileService {
   constructor(
     private readonly projectRepository: ProjectRepository,
     private readonly deploymentRepository: DeploymentRepository,
     private readonly deploymentService: DeploymentService,
     private readonly eventService: DeploymentEventService,
-    private readonly dockerRuntimeService: DockerRuntimeService,
-    private readonly caddyService: CaddyService
+    private readonly dockerRuntimeService: StartupDockerRuntimeService,
+    private readonly caddyService: StartupCaddyService
   ) {}
 
   async reconcile(): Promise<void> {

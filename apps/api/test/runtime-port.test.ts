@@ -18,4 +18,10 @@ describe('resolveRuntimePortFromInspect', () => {
     ).toBe(3000);
     expect(resolveRuntimePortFromInspect([{}], 3000)).toBe(3000);
   });
+
+  it('fails instead of masking a malformed single tcp port', () => {
+    expect(() =>
+      resolveRuntimePortFromInspect([{ Config: { ExposedPorts: { 'not-a-port/tcp': {} } } }], 3000)
+    ).toThrow('Docker image exposes an invalid TCP port');
+  });
 });

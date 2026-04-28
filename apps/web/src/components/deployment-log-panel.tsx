@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import type { DeploymentEvent } from '@brimble/contracts';
+import { isLogEvent, type DeploymentEvent } from '@brimble/contracts';
 
-import { isLogEvent } from '../lib/deployment-events';
 import { formatLogTimestamp } from '../lib/format';
 
 export function DeploymentLogPanel(props: {

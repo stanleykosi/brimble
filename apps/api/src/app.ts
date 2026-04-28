@@ -27,11 +27,24 @@ import { DeploymentEventService } from './services/deployment-event-service.js';
 import { DeploymentService } from './services/deployment-service.js';
 import { QueueService } from './services/queue-service.js';
 
+type ApiDeploymentService = Pick<
+  DeploymentService,
+  | 'listDeployments'
+  | 'getDeployment'
+  | 'planPendingDeployment'
+  | 'persistPendingDeployment'
+>;
+type ApiDeploymentEventService = Pick<
+  DeploymentEventService,
+  'list' | 'getLatestSequence' | 'subscribe'
+>;
+type ApiQueueService = Pick<QueueService, 'kick'>;
+
 export interface ApiContext {
   config: AppConfig;
-  deploymentService: DeploymentService;
-  deploymentEventService: DeploymentEventService;
-  queueService: QueueService;
+  deploymentService: ApiDeploymentService;
+  deploymentEventService: ApiDeploymentEventService;
+  queueService: ApiQueueService;
   startupState?: {
     isReady: boolean;
   };
@@ -53,7 +66,7 @@ function formatSseEvent(event: string, id: number, payload: unknown): string {
 }
 
 function replayDeploymentEvents(
-  eventService: DeploymentEventService,
+  eventService: ApiDeploymentEventService,
   deploymentId: string,
   after: number,
   through: number,

@@ -1,13 +1,11 @@
 import path from 'node:path';
-import { Readable } from 'node:stream';
 
-import { FormDataEncoder } from 'form-data-encoder';
 import { FormData, File } from 'formdata-node';
 import type { DeploymentDetail } from '@brimble/contracts';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { AppConfig } from '../src/config/env.js';
-import { createTestConfig } from './helpers.js';
+import { createTestConfig, encodeFormData } from './helpers.js';
 
 const { moveFileMock } = vi.hoisted(() => ({
   moveFileMock: vi.fn()
@@ -26,7 +24,7 @@ vi.mock('../src/utils/filesystem.js', async () => {
   };
 });
 
-import { buildApp } from '../src/app.js';
+import { buildApp, type ApiContext } from '../src/app.js';
 
 const cleanups: Array<() => Promise<void>> = [];
 
@@ -42,14 +40,6 @@ afterEach(async () => {
     await cleanup?.();
   }
 });
-
-function encodeFormData(formData: FormData) {
-  const encoder = new FormDataEncoder(formData);
-  return {
-    headers: encoder.headers,
-    payload: Readable.from(encoder)
-  };
-}
 
 function createPlannedDeployment(config: AppConfig): DeploymentDetail {
   const now = new Date().toISOString();
@@ -95,13 +85,14 @@ async function createRouteTestApp() {
     listDeployments: vi.fn(() => []),
     getDeployment: vi.fn(),
     planPendingDeployment: vi.fn(() => createPlannedDeployment(config)),
-    persistPendingDeployment: vi.fn((deployment) => deployment),
-    createPendingDeployment: vi.fn(),
-    updateDeployment: vi.fn()
-  } as any;
+    persistPendingDeployment: vi.fn(
+      (deployment: Parameters<ApiContext['deploymentService']['persistPendingDeployment']>[0]) =>
+        deployment
+    )
+  } satisfies ApiContext['deploymentService'];
   const queueService = {
     kick: vi.fn()
-  } as any;
+  } satisfies ApiContext['queueService'];
   const app = await buildApp({
     config,
     deploymentService,
@@ -109,7 +100,7 @@ async function createRouteTestApp() {
       getLatestSequence: () => 0,
       list: () => [],
       subscribe: () => () => {}
-    } as any,
+    } satisfies ApiContext['deploymentEventService'],
     queueService
   });
 

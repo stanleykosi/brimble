@@ -202,7 +202,20 @@ export type ErrorResponse = z.infer<typeof errorResponseSchema>;
 export type DeploymentLogPayload = z.infer<typeof deploymentLogPayloadSchema>;
 export type DeploymentStatusPayload = z.infer<typeof deploymentStatusPayloadSchema>;
 export type DeploymentSystemPayload = z.infer<typeof deploymentSystemPayloadSchema>;
+export type DeploymentEventPayload = z.infer<typeof deploymentEventPayloadSchema>;
 export type DeploymentEvent = z.infer<typeof deploymentEventSchema>;
+export type DeploymentLogEvent = DeploymentEvent & {
+  eventType: 'log';
+  payload: DeploymentLogPayload;
+};
+export type DeploymentStatusEvent = DeploymentEvent & {
+  eventType: 'status';
+  payload: DeploymentStatusPayload;
+};
+export type DeploymentSystemEvent = DeploymentEvent & {
+  eventType: 'system';
+  payload: DeploymentSystemPayload;
+};
 export type DeploymentSummary = z.infer<typeof deploymentSummarySchema>;
 export type DeploymentDetail = z.infer<typeof deploymentDetailSchema>;
 export type ListDeploymentsResponse = z.infer<typeof listDeploymentsResponseSchema>;
@@ -213,4 +226,16 @@ export type CreateDeploymentFields = z.infer<typeof createDeploymentFieldsSchema
 
 export function isNonTerminalStatus(status: DeploymentStatus): boolean {
   return nonTerminalStatuses.includes(status as (typeof nonTerminalStatuses)[number]);
+}
+
+export function isLogEvent(event: DeploymentEvent): event is DeploymentLogEvent {
+  return event.eventType === 'log';
+}
+
+export function isStatusEvent(event: DeploymentEvent): event is DeploymentStatusEvent {
+  return event.eventType === 'status';
+}
+
+export function isSystemEvent(event: DeploymentEvent): event is DeploymentSystemEvent {
+  return event.eventType === 'system';
 }

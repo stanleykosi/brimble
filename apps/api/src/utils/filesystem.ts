@@ -100,13 +100,14 @@ export async function normalizeExtractedSource(
     });
   }
 
+  const onlyMeaningfulEntry = meaningfulEntries[0];
   const shouldCollapse =
     meaningfulEntries.length === 1 &&
-    meaningfulEntries[0]?.isDirectory() === true &&
-    (await stat(path.join(extractedRootPath, meaningfulEntries[0].name))).isDirectory();
+    onlyMeaningfulEntry?.isDirectory() === true &&
+    (await stat(path.join(extractedRootPath, onlyMeaningfulEntry.name))).isDirectory();
 
   const actualSourceRoot = shouldCollapse
-    ? path.join(extractedRootPath, meaningfulEntries[0]!.name)
+    ? path.join(extractedRootPath, onlyMeaningfulEntry.name)
     : extractedRootPath;
 
   await cp(actualSourceRoot, destinationRootPath, { recursive: true });

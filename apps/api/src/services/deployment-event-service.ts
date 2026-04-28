@@ -1,6 +1,8 @@
 import type {
   DeploymentEvent,
   DeploymentEventPhase,
+  DeploymentEventPayload,
+  DeploymentEventType,
   DeploymentEventStream,
   DeploymentLogPayload,
   DeploymentStatusPayload,
@@ -70,10 +72,10 @@ export class DeploymentEventService {
 
   private append(
     deploymentId: string,
-    eventType: 'log' | 'status' | 'system',
+    eventType: DeploymentEventType,
     phase: DeploymentEventPhase | null,
     stream: DeploymentEventStream | null,
-    payload: DeploymentLogPayload | DeploymentStatusPayload | DeploymentSystemPayload
+    payload: DeploymentEventPayload
   ): DeploymentEvent {
     const event = this.repository.append(
       deploymentId,

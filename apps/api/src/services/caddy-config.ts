@@ -3,9 +3,50 @@ import type { DeploymentDetail } from '@brimble/contracts';
 import type { AppConfig } from '../config/env.js';
 import { getIngressHosts } from './ingress-hosts.js';
 
-type CaddyRoute = Record<string, unknown>;
+type CaddyMatch = {
+  host: string[];
+  path?: string[];
+};
 
-function reverseProxyHandle(dial: string): Record<string, unknown> {
+type CaddyReverseProxyHandle = {
+  handler: 'reverse_proxy';
+  upstreams: Array<{ dial: string }>;
+};
+
+type CaddyRewriteHandle = {
+  handler: 'rewrite';
+  strip_path_prefix: string;
+};
+
+type CaddyHandle = CaddyReverseProxyHandle | CaddyRewriteHandle;
+
+export type CaddyRoute = {
+  match: CaddyMatch[];
+  handle: CaddyHandle[];
+  terminal: true;
+};
+
+export type CaddyConfigDocument = {
+  admin: {
+    listen: string;
+  };
+  apps: {
+    http: {
+      servers: {
+        control_plane: {
+          listen: string[];
+          automatic_https: {
+            disable: true;
+            disable_redirects: true;
+          };
+          routes: CaddyRoute[];
+        };
+      };
+    };
+  };
+};
+
+function reverseProxyHandle(dial: string): CaddyReverseProxyHandle {
   return {
     handler: 'reverse_proxy',
     upstreams: [{ dial }]
@@ -33,6 +74,10 @@ function buildPathRoute(deployment: DeploymentDetail, ingressHosts: string[]): C
 }
 
 function buildHostnameRoute(deployment: DeploymentDetail): CaddyRoute {
+  if (!deployment.routeHost) {
+    throw new Error(`Hostname deployment ${deployment.id} is missing routeHost`);
+  }
+
   return {
     match: [
       {
@@ -47,7 +92,7 @@ function buildHostnameRoute(deployment: DeploymentDetail): CaddyRoute {
 export function buildDesiredCaddyConfig(
   config: AppConfig,
   runningDeployments: DeploymentDetail[]
-): Record<string, unknown> {
+): CaddyConfigDocument {
   const ingressHosts = getIngressHosts(config);
   const pathRoutes = runningDeployments
     .filter((deployment) => deployment.routeMode === 'path')

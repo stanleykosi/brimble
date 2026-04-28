@@ -8,7 +8,9 @@ import {
   type DeploymentEvent,
   type DeploymentEventsResponse,
   type ListDeploymentsResponse,
-  type PublicConfig
+  type PublicConfig,
+  type RouteMode,
+  type SourceType
 } from '@brimble/contracts';
 
 const apiBase = (import.meta.env.VITE_API_BASE ?? '/api').replace(/\/+$/, '');
@@ -56,10 +58,10 @@ export async function getDeploymentEvents(id: string): Promise<DeploymentEventsR
 }
 
 export async function createDeployment(input: {
-  sourceType: 'git' | 'archive';
+  sourceType: SourceType;
   gitUrl?: string;
   file?: File | null;
-  routeMode?: 'hostname' | 'path';
+  routeMode?: RouteMode;
 }): Promise<DeploymentDetail> {
   const formData = new FormData();
   formData.set('sourceType', input.sourceType);

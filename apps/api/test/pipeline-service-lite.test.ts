@@ -3,45 +3,14 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PipelineService } from '../src/services/pipeline-service.js';
 import { AppError } from '../src/utils/errors.js';
-
-function createDeployment(id: string): DeploymentDetail {
-  const now = new Date().toISOString();
-
-  return {
-    id,
-    projectId: 'project_local',
-    slug: id.replaceAll('_', '-'),
-    sourceType: 'git',
-    sourceGitUrl: 'https://github.com/example/repo',
-    sourceArchiveFilename: null,
-    sourceArchivePath: null,
-    sourceRootPath: `/data/workspaces/${id}/src`,
-    status: 'pending',
-    substage: 'queued',
-    statusReason: null,
-    imageTag: null,
-    containerName: null,
-    containerId: null,
-    routeMode: 'hostname',
-    routeHost: `${id}.localhost`,
-    routePath: null,
-    liveUrl: null,
-    internalPort: null,
-    railpackPlanPath: null,
-    railpackInfoPath: null,
-    buildStartedAt: null,
-    buildFinishedAt: null,
-    deployStartedAt: null,
-    deployFinishedAt: null,
-    runningAt: null,
-    failedAt: null,
-    createdAt: now,
-    updatedAt: now
-  };
-}
+import { createDeploymentDetail } from './helpers.js';
 
 function createHarness(id: string) {
-  const deployment = createDeployment(id);
+  const deployment = createDeploymentDetail({
+    id,
+    slug: id.replaceAll('_', '-'),
+    routeHost: `${id}.localhost`
+  });
   const events: DeploymentEvent[] = [];
 
   const appendEvent = (

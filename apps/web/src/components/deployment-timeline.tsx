@@ -1,6 +1,4 @@
-import type { DeploymentDetail, DeploymentEvent } from '@brimble/contracts';
-
-import { isStatusEvent, isSystemEvent } from '../lib/deployment-events';
+import { isStatusEvent, isSystemEvent, type DeploymentDetail, type DeploymentEvent } from '@brimble/contracts';
 
 export function DeploymentTimeline({
   deployment,

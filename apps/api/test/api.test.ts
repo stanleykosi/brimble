@@ -1,8 +1,6 @@
 import { readdir } from 'node:fs/promises';
-import { Readable } from 'node:stream';
 import path from 'node:path';
 
-import { FormDataEncoder } from 'form-data-encoder';
 import { FormData, File } from 'formdata-node';
 import type { DeploymentEvent } from '@brimble/contracts';
 import type { Response as InjectResponse } from 'light-my-request';
@@ -11,7 +9,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../src/app.js';
 import type { DeploymentEventService } from '../src/services/deployment-event-service.js';
 import type { QueueService } from '../src/services/queue-service.js';
-import { createTestRepositories } from './helpers.js';
+import { createGitPendingDeploymentInput, createTestRepositories, encodeFormData } from './helpers.js';
 
 const cleanups: Array<() => Promise<void>> = [];
 
@@ -43,13 +41,7 @@ async function createStreamTestApp(
   const repos = await createTestRepositories();
   cleanups.push(repos.cleanup);
 
-  const deployment = repos.deploymentService.createPendingDeployment({
-    fields: { sourceType: 'git', gitUrl: 'https://github.com/example/repo' },
-    sourceType: 'git',
-    sourceGitUrl: 'https://github.com/example/repo',
-    sourceArchiveFilename: null,
-    sourceArchivePath: null
-  });
+  const deployment = repos.deploymentService.createPendingDeployment(createGitPendingDeploymentInput());
 
   const app = await buildApp({
     config: repos.config,
@@ -63,14 +55,6 @@ async function createStreamTestApp(
   });
 
   return { app, deployment };
-}
-
-function encodeFormData(formData: FormData) {
-  const encoder = new FormDataEncoder(formData);
-  return {
-    headers: encoder.headers,
-    payload: Readable.from(encoder)
-  };
 }
 
 async function readStreamUntil(response: InjectResponse, pattern: string): Promise<string> {
@@ -142,13 +126,7 @@ describe('deployment API', () => {
 
   it('replays SSE events after Last-Event-ID', async () => {
     const { app, deploymentService, deploymentEventService } = await createTestApp();
-    const deployment = deploymentService.createPendingDeployment({
-      fields: { sourceType: 'git', gitUrl: 'https://github.com/example/repo' },
-      sourceType: 'git',
-      sourceGitUrl: 'https://github.com/example/repo',
-      sourceArchiveFilename: null,
-      sourceArchivePath: null
-    });
+    const deployment = deploymentService.createPendingDeployment(createGitPendingDeploymentInput());
 
     deploymentEventService.appendLog(deployment.id, 'prepare', 'stdout', {
       message: 'first event',
@@ -200,13 +178,7 @@ describe('deployment API', () => {
 
   it('pages full persisted event history through SSE replay', async () => {
     const { app, deploymentService, deploymentEventService } = await createTestApp();
-    const deployment = deploymentService.createPendingDeployment({
-      fields: { sourceType: 'git', gitUrl: 'https://github.com/example/repo' },
-      sourceType: 'git',
-      sourceGitUrl: 'https://github.com/example/repo',
-      sourceArchiveFilename: null,
-      sourceArchivePath: null
-    });
+    const deployment = deploymentService.createPendingDeployment(createGitPendingDeploymentInput());
 
     for (let index = 0; index < 2504; index += 1) {
       deploymentEventService.appendLog(deployment.id, 'build', 'stdout', {

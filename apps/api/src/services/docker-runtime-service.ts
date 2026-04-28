@@ -20,22 +20,30 @@ export function resolveRuntimePortFromInspect(
   );
 
   if (exposed.length === 1) {
-    return Number.parseInt(exposed[0]!.split('/')[0]!, 10);
+    const [exposedPort] = exposed;
+    if (!exposedPort) {
+      return fallbackPort;
+    }
+
+    const port = Number(exposedPort.split('/')[0]);
+
+    if (Number.isInteger(port) && port > 0 && port <= 65535) {
+      return port;
+    }
+
+    throw new AppError({
+      code: 'IMAGE_INSPECT_FAILED',
+      message: `Docker image exposes an invalid TCP port: ${exposedPort}`,
+      details: {
+        exposedPorts: exposed
+      }
+    });
   }
 
   return fallbackPort;
 }
 
-export function isMissingContainerInspectResult(result: CommandResult): boolean {
-  if (result.code === 0) {
-    return false;
-  }
-
-  const output = [...result.stderr, ...result.stdout].join('\n');
-  return /no such (?:container|object)/i.test(output);
-}
-
-export function isMissingContainerRemoveResult(result: CommandResult): boolean {
+function isMissingDockerObjectResult(result: CommandResult): boolean {
   if (result.code === 0) {
     return false;
   }
@@ -104,7 +112,16 @@ export class DockerRuntimeService {
       });
     }
 
-    const containerId = result.stdout[result.stdout.length - 1]!.trim();
+    const containerId = result.stdout.at(-1)?.trim();
+    if (!containerId) {
+      throw new AppError({
+        code: 'CONTAINER_START_FAILED',
+        message: 'docker run did not return a container id',
+        details: {
+          stderr: result.stderr.join('\n')
+        }
+      });
+    }
 
     this.eventService.appendSystem(
       deployment.id,
@@ -152,7 +169,7 @@ export class DockerRuntimeService {
       return true;
     }
 
-    if (isMissingContainerInspectResult(result)) {
+    if (isMissingDockerObjectResult(result)) {
       return false;
     }
 
@@ -181,7 +198,7 @@ export class DockerRuntimeService {
       args: ['rm', '-f', containerName]
     });
 
-    if (result.code === 0 || isMissingContainerRemoveResult(result)) {
+    if (result.code === 0 || isMissingDockerObjectResult(result)) {
       return;
     }
 

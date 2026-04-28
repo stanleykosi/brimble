@@ -74,9 +74,7 @@ export class CaddyService {
         if (response.ok) {
           return;
         }
-      } catch {
-        // keep retrying until timeout
-      }
+      } catch {}
 
       await sleep(this.config.DEPLOY_HEALTHCHECK_INTERVAL_MS);
     }
@@ -152,9 +150,7 @@ export class CaddyService {
           if (isReachableThroughCaddy(response)) {
             return;
           }
-        } catch {
-          // keep retrying until timeout
-        }
+        } catch {}
       }
 
       await sleep(this.config.DEPLOY_HEALTHCHECK_INTERVAL_MS);

@@ -2,42 +2,30 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { DeploymentDetail } from '@brimble/contracts';
 
+import type { CaddyConfigDocument, CaddyRoute } from '../src/services/caddy-config.js';
 import { CaddyService } from '../src/services/caddy-service.js';
-import { createTestConfig } from './helpers.js';
+import { createDeploymentDetail, createTestConfig } from './helpers.js';
 
 function createDeployment(overrides: Partial<DeploymentDetail> = {}): DeploymentDetail {
-  return {
-    id: 'dep_test',
-    projectId: 'project_local',
-    slug: 'dep-test',
-    sourceType: 'git',
-    sourceGitUrl: 'https://github.com/example/repo',
-    sourceArchiveFilename: null,
-    sourceArchivePath: null,
-    sourceRootPath: '/data/workspaces/dep_test/src',
+  return createDeploymentDetail({
     status: 'deploying',
     substage: 'health_checking',
-    statusReason: null,
     imageTag: 'brimble-local/local:dep-test',
     containerName: 'brimble-app-dep-test',
     containerId: 'container-test',
-    routeMode: 'hostname',
-    routeHost: 'dep-test.localhost',
-    routePath: null,
-    liveUrl: null,
     internalPort: 3000,
-    railpackPlanPath: null,
-    railpackInfoPath: null,
-    buildStartedAt: null,
-    buildFinishedAt: null,
-    deployStartedAt: null,
-    deployFinishedAt: null,
-    runningAt: null,
-    failedAt: null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
     ...overrides
-  };
+  });
+}
+
+function routeHasHost(route: CaddyRoute, expectedHost: string): boolean {
+  return route.match.some((match) => match.host.includes(expectedHost));
+}
+
+function routeHasPath(route: CaddyRoute, expectedPaths: string[]): boolean {
+  return route.match.some((match) =>
+    expectedPaths.every((expectedPath) => match.path?.includes(expectedPath))
+  );
 }
 
 describe('CaddyService', () => {
@@ -66,37 +54,20 @@ describe('CaddyService', () => {
         {} as never
       );
 
-      await service.waitForDeployment({
+      await service.waitForDeployment(createDeployment({
         id: 'dep_path',
-        projectId: 'project_local',
         slug: 'dep-path',
         sourceType: 'archive',
         sourceGitUrl: null,
         sourceArchiveFilename: 'sample.tgz',
         sourceArchivePath: '/data/uploads/dep_path/sample.tgz',
-        sourceRootPath: '/data/workspaces/dep_path/src',
-        status: 'deploying',
-        substage: 'health_checking',
-        statusReason: null,
         imageTag: 'brimble-local/local:dep-path',
         containerName: 'brimble-app-dep-path',
         containerId: 'abc123',
         routeMode: 'path',
         routeHost: null,
         routePath: '/apps/dep-path',
-        liveUrl: null,
-        internalPort: 3000,
-        railpackPlanPath: null,
-        railpackInfoPath: null,
-        buildStartedAt: null,
-        buildFinishedAt: null,
-        deployStartedAt: null,
-        deployFinishedAt: null,
-        runningAt: null,
-        failedAt: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
+      }));
 
       expect(fetchMock).toHaveBeenCalledWith(
         'http://caddy/apps/dep-path/healthz',
@@ -230,137 +201,70 @@ describe('CaddyService', () => {
 
       const service = new CaddyService(context.config, {
         listByStatuses: () => [
-          {
+          createDeployment({
             id: 'dep_deploying',
-            projectId: 'project_local',
             slug: 'dep-deploying',
-            sourceType: 'git',
             sourceGitUrl: 'https://github.com/example/deploying',
-            sourceArchiveFilename: null,
-            sourceArchivePath: null,
-            sourceRootPath: '/data/workspaces/dep_deploying/src',
-            status: 'deploying',
-            substage: 'health_checking',
-            statusReason: null,
             imageTag: 'brimble-local/local:dep-deploying',
             containerName: 'brimble-app-dep-deploying',
             containerId: 'container-deploying',
-            routeMode: 'hostname',
             routeHost: 'dep-deploying.localhost',
-            routePath: null,
-            liveUrl: null,
-            internalPort: 3000,
-            railpackPlanPath: null,
-            railpackInfoPath: null,
-            buildStartedAt: null,
-            buildFinishedAt: null,
-            deployStartedAt: null,
-            deployFinishedAt: null,
-            runningAt: null,
-            failedAt: null,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          },
-          {
+          }),
+          createDeployment({
             id: 'dep_running',
-            projectId: 'project_local',
             slug: 'dep-running',
-            sourceType: 'git',
             sourceGitUrl: 'https://github.com/example/running',
-            sourceArchiveFilename: null,
-            sourceArchivePath: null,
-            sourceRootPath: '/data/workspaces/dep_running/src',
             status: 'running',
             substage: 'complete',
-            statusReason: null,
             imageTag: 'brimble-local/local:dep-running',
             containerName: 'brimble-app-dep-running',
             containerId: 'container-running',
-            routeMode: 'hostname',
             routeHost: 'dep-running.localhost',
-            routePath: null,
             liveUrl: 'http://dep-running.localhost:8080/',
-            internalPort: 3000,
-            railpackPlanPath: null,
-            railpackInfoPath: null,
-            buildStartedAt: null,
-            buildFinishedAt: null,
-            deployStartedAt: null,
-            deployFinishedAt: null,
-            runningAt: new Date().toISOString(),
-            failedAt: null,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }
+            runningAt: new Date().toISOString()
+          })
         ]
       } as never);
 
       await service.applyRoutes([
-        {
+        createDeployment({
           id: 'dep_extra',
-          projectId: 'project_local',
           slug: 'dep-extra',
           sourceType: 'archive',
           sourceGitUrl: null,
           sourceArchiveFilename: 'sample.tgz',
           sourceArchivePath: '/data/uploads/dep_extra/sample.tgz',
-          sourceRootPath: '/data/workspaces/dep_extra/src',
-          status: 'deploying',
           substage: 'route_configuring',
-          statusReason: null,
           imageTag: 'brimble-local/local:dep-extra',
           containerName: 'brimble-app-dep-extra',
           containerId: 'container-extra',
           routeMode: 'path',
           routeHost: null,
           routePath: '/apps/dep-extra',
-          liveUrl: null,
-          internalPort: 3000,
-          railpackPlanPath: null,
-          railpackInfoPath: null,
-          buildStartedAt: null,
-          buildFinishedAt: null,
-          deployStartedAt: null,
-          deployFinishedAt: null,
-          runningAt: null,
-          failedAt: null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
+        })
       ]);
 
       const loadCall = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/load'));
       expect(loadCall).toBeDefined();
 
-      const body = JSON.parse(String(loadCall?.[1]?.body ?? '{}')) as Record<string, any>;
-      const routes = (body.apps?.http?.servers?.control_plane?.routes ?? []) as Array<Record<string, any>>;
+      const body = JSON.parse(String(loadCall?.[1]?.body ?? '{}')) as CaddyConfigDocument;
+      const routes = body.apps.http.servers.control_plane.routes;
       const hostnameRoutes = routes.filter((route) =>
-        route.match?.some(
-          (match: Record<string, any>) =>
-            Array.isArray(match.host) && match.host.every((host: string) => host !== 'localhost')
-        )
+        route.match.some((match) => match.host.every((host) => host !== 'localhost'))
       );
       const pathRoutes = routes.filter((route) =>
-        route.match?.some((match: Record<string, any>) => Array.isArray(match.path))
+        route.match.some((match) => Array.isArray(match.path))
       );
 
       expect(
-        hostnameRoutes.some((route) =>
-          route.match?.some((match: Record<string, any>) => match.host?.includes('dep-deploying.localhost'))
-        )
+        hostnameRoutes.some((route) => routeHasHost(route, 'dep-deploying.localhost'))
       ).toBe(true);
       expect(
-        hostnameRoutes.some((route) =>
-          route.match?.some((match: Record<string, any>) => match.host?.includes('dep-running.localhost'))
-        )
+        hostnameRoutes.some((route) => routeHasHost(route, 'dep-running.localhost'))
       ).toBe(true);
       expect(
         pathRoutes.some((route) =>
-          route.match?.some(
-            (match: Record<string, any>) =>
-              match.path?.includes('/apps/dep-extra') &&
-              match.path?.includes('/apps/dep-extra/*')
-          )
+          routeHasPath(route, ['/apps/dep-extra', '/apps/dep-extra/*'])
         )
       ).toBe(true);
     } finally {

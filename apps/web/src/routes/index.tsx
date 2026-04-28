@@ -50,16 +50,23 @@ function HomePage() {
   });
 
   const selectedDeploymentId = search.deploymentId ?? deploymentsQuery.data?.items[0]?.id;
+  const requireSelectedDeploymentId = () => {
+    if (!selectedDeploymentId) {
+      throw new Error('No deployment is selected');
+    }
+
+    return selectedDeploymentId;
+  };
 
   const deploymentQuery = useQuery({
     queryKey: ['deployment', selectedDeploymentId],
-    queryFn: () => getDeployment(selectedDeploymentId!),
+    queryFn: () => getDeployment(requireSelectedDeploymentId()),
     enabled: Boolean(selectedDeploymentId)
   });
 
   const eventsQuery = useQuery({
     queryKey: ['deployment-events', selectedDeploymentId],
-    queryFn: () => getDeploymentEvents(selectedDeploymentId!),
+    queryFn: () => getDeploymentEvents(requireSelectedDeploymentId()),
     enabled: Boolean(selectedDeploymentId)
   });
 

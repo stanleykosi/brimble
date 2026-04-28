@@ -718,7 +718,13 @@ function html() {
       loadRuntime().catch((error) => appendEvent('runtime.error', { message: error.message }));
       loadChecks().catch((error) => appendEvent('checks.error', { message: error.message }));
       connectEvents();
-      setInterval(() => loadRuntime().catch(() => {}), 6000);
+      setInterval(() => {
+        loadRuntime().catch((error) => {
+          appendEvent('runtime.error', {
+            message: error instanceof Error ? error.message : String(error)
+          });
+        });
+      }, 6000);
     </script>
   </body>
 </html>`;

@@ -2,20 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PipelineService } from '../src/services/pipeline-service.js';
 import { AppError } from '../src/utils/errors.js';
-import { createTestRepositories } from './helpers.js';
+import { createGitPendingDeploymentInput, createTestRepositories } from './helpers.js';
 
 describe('PipelineService', () => {
   it('records a terminal failure before route cleanup retries and preserves the original error', async () => {
     const repos = await createTestRepositories();
 
     try {
-      const deployment = repos.deploymentService.createPendingDeployment({
-        fields: { sourceType: 'git', gitUrl: 'https://github.com/example/repo' },
-        sourceType: 'git',
-        sourceGitUrl: 'https://github.com/example/repo',
-        sourceArchiveFilename: null,
-        sourceArchivePath: null
-      });
+      const deployment = repos.deploymentService.createPendingDeployment(createGitPendingDeploymentInput());
 
       let applyRoutesCalls = 0;
       const captureRuntimeLogTail = vi.fn(async () => ['runtime tail']);
@@ -102,13 +96,7 @@ describe('PipelineService', () => {
     const repos = await createTestRepositories();
 
     try {
-      const deployment = repos.deploymentService.createPendingDeployment({
-        fields: { sourceType: 'git', gitUrl: 'https://github.com/example/repo' },
-        sourceType: 'git',
-        sourceGitUrl: 'https://github.com/example/repo',
-        sourceArchiveFilename: null,
-        sourceArchivePath: null
-      });
+      const deployment = repos.deploymentService.createPendingDeployment(createGitPendingDeploymentInput());
 
       const cleanupWorkspace = vi.fn(async () => {});
 
@@ -152,13 +140,7 @@ describe('PipelineService', () => {
     const repos = await createTestRepositories();
 
     try {
-      const deployment = repos.deploymentService.createPendingDeployment({
-        fields: { sourceType: 'git', gitUrl: 'https://github.com/example/repo' },
-        sourceType: 'git',
-        sourceGitUrl: 'https://github.com/example/repo',
-        sourceArchiveFilename: null,
-        sourceArchivePath: null
-      });
+      const deployment = repos.deploymentService.createPendingDeployment(createGitPendingDeploymentInput());
 
       repos.deploymentService.transitionStatus(deployment.id, 'building', {
         substage: 'source_fetching'

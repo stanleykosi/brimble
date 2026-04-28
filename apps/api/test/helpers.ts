@@ -1,6 +1,11 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
+import { Readable } from 'node:stream';
+
+import type { DeploymentDetail } from '@brimble/contracts';
+import { FormDataEncoder } from 'form-data-encoder';
+import type { FormData } from 'formdata-node';
 
 import type { AppConfig } from '../src/config/env.js';
 import { createDatabase } from '../src/db/database.js';
@@ -68,5 +73,64 @@ export async function createTestRepositories() {
       db.close();
       await cleanup();
     }
+  };
+}
+
+export function encodeFormData(formData: FormData) {
+  const encoder = new FormDataEncoder(formData);
+  return {
+    headers: encoder.headers,
+    payload: Readable.from(encoder)
+  };
+}
+
+export function createDeploymentDetail(overrides: Partial<DeploymentDetail> = {}): DeploymentDetail {
+  const id = overrides.id ?? 'dep_test';
+  const slug = overrides.slug ?? id.replaceAll('_', '-');
+  const now = new Date().toISOString();
+
+  return {
+    id,
+    projectId: 'project_local',
+    slug,
+    sourceType: 'git',
+    sourceGitUrl: 'https://github.com/example/repo',
+    sourceArchiveFilename: null,
+    sourceArchivePath: null,
+    sourceRootPath: `/data/workspaces/${id}/src`,
+    status: 'pending',
+    substage: 'queued',
+    statusReason: null,
+    imageTag: null,
+    containerName: null,
+    containerId: null,
+    routeMode: 'hostname',
+    routeHost: `${slug}.localhost`,
+    routePath: null,
+    liveUrl: null,
+    internalPort: null,
+    railpackPlanPath: null,
+    railpackInfoPath: null,
+    buildStartedAt: null,
+    buildFinishedAt: null,
+    deployStartedAt: null,
+    deployFinishedAt: null,
+    runningAt: null,
+    failedAt: null,
+    createdAt: now,
+    updatedAt: now,
+    ...overrides
+  };
+}
+
+export function createGitPendingDeploymentInput() {
+  const gitUrl = 'https://github.com/example/repo';
+
+  return {
+    fields: { sourceType: 'git' as const, gitUrl },
+    sourceType: 'git' as const,
+    sourceGitUrl: gitUrl,
+    sourceArchiveFilename: null,
+    sourceArchivePath: null
   };
 }
